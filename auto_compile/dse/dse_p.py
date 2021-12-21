@@ -7,6 +7,7 @@ import subprocess
 import time
 import pandas as pd
 import math
+import os
 
 def list_split(ori_list, split_num):
   chunk_size = int(np.ceil(float(len(ori_list)) / split_num))
@@ -325,7 +326,7 @@ def res_est(params):
 
   return DSP, BRAM18K
 
-def run(f_model, f_input_config, f_board, parallel_en, systolic_en, dynamic_tiling_level):
+def run(f_model, f_input_config, f_board, parallel_en, systolic_en, dynamic_tiling_level, output_dir):
   print("*************************************************")
   # record start time
   global_timer_start = time.time()
@@ -548,10 +549,10 @@ def run(f_model, f_input_config, f_board, parallel_en, systolic_en, dynamic_tili
           num += 1
           
   layer_configs_pd = pd.DataFrame(layer_configs)
-  layer_configs_pd.to_csv("output_layer.csv")
+  layer_configs_pd.to_csv(os.path.join(output_dir, "output_layer.csv"))
   
   params_list_pd = pd.DataFrame(params_list)
-  params_list_pd.to_csv("params.csv")
+  params_list_pd.to_csv(os.path.join(output_dir, "params.csv"))
   
   
   #return
@@ -613,7 +614,7 @@ def run(f_model, f_input_config, f_board, parallel_en, systolic_en, dynamic_tili
   mt = opt_params["LAYER_OUT_NUM_T_LIST"]
   
   layer_id = 0
-  model_out = open("network_out.model", "w")
+  model_out = open(os.path.join(output_dir, "network_out.model"), "w")
   for i in lines:
     line = i.strip('\n')
     content = line.split(";")
@@ -639,8 +640,11 @@ def run(f_model, f_input_config, f_board, parallel_en, systolic_en, dynamic_tili
 
   print("*************************************************")
   global_timer_end = time.time()
-  print('Total elapsed time (s): %.3f' % (global_timer_end - global_timer_start))
+  elapsed_time = global_timer_end - global_timer_start
+  print('Total elapsed time (s): %.3f' % (elapsed_time))
   print("*************************************************")
+
+  return opt_params['FRE'], opt_time, opt_fps, opt_BRAM18K, opt_BRAM18K_util, opt_DSP, opt_DSP_util, elapsed_time
 
 def param_sweep(params_list, config, layer_configs, concat_layers_list, total_layer, systolic_en):
   opt_latency = np.inf
@@ -761,6 +765,14 @@ if __name__ == "__main__":
   parser.add_argument('--parallel', help='multi-threading parallelization', default=True, action='store_false', dest='parallel')
   parser.add_argument('--systolic', help='systolic-array-search', default=True, action='store_false', dest='systolic')
   parser.add_argument('-dt', '--dynamic-tiling', metavar='DYNAMIC_TILING', help='dynamic tiling level (0:disabled, 1:channel 2:height/width)', required=False, type=int, default=2, dest='dynamic_tiling')
+  parser.add_argument('-o', '--output_dir', type=str, default='./', help='directory to output results')
 
   args = parser.parse_args()
-  run(args.model, args.input_config, args.board, args.parallel, args.systolic, args.dynamic_tiling)
+  print("parallel:", args.parallel)
+  print("sa:", args.systolic)
+  if not os.path.isdir(args.output_dir):
+    os.mkdir(args.output_dir)
+  results = run(args.model, args.input_config, args.board, args.parallel, args.systolic, args.dynamic_tiling, args.output_dir)
+  #freq, time, fps, bram, bram_util, dsp, dsp_util, dse_time
+  results = np.array(results)
+  np.save(os.path.join(args.output_dir, "results.npy"), results)

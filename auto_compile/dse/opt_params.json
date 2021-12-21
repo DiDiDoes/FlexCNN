@@ -1,0 +1,49 @@
+{
+  "LAYER_IN_H_T": 2,
+  "LAYER_IN_W_T": 32,
+  "LAYER_OUT_H_T": 2,
+  "LAYER_OUT_W_T": 32,
+  "LAYER_IN_NUM_T": 64,
+  "LAYER_OUT_NUM_T": 64,
+  "SIMD_LANE": 8,
+  "SA_ROWS": 16,
+  "SA_COLS": 32,
+  "SA_SIMD_LANE": 1,
+  "LAYER_IN_NUM_T_LIST": [
+    3,
+    16,
+    32,
+    32,
+    32,
+    64,
+    32
+  ],
+  "LAYER_OUT_NUM_T_LIST": [
+    16,
+    32,
+    32,
+    32,
+    64,
+    32,
+    64
+  ],
+  "LAYER_IN_H_T_LIST": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "LAYER_IN_W_T_LIST": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "FRE": 250
+}
